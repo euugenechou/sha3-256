@@ -1,8 +1,8 @@
 # SHA-3 256 in C
 
-This project is comprised of the singular program ```sha3-test```, which is
-capable of performing the sponge-based, SHA-3 256 secure hash algorithm on
-arbitrary amounts of input data.
+This project is comprised of the singular program `sha3-test`, which is capable
+of performing the sponge-based, SHA-3 256 secure hash algorithm on arbitrary
+amounts of input data.
 
 ### Design
 
@@ -26,18 +26,17 @@ Or:
 
 ### Usage
 
-Note that the length of the input to hash must be specified using a
-```getopt()``` command-line option as demonstrated below.  To hash a 64-byte
-input (```stdin``` and ```stdout``` are the default for input and output,
-respectively):
+Note that the length of the input to hash must be specified using a `getopt()`
+command-line option as demonstrated below. To hash a 64-byte input (`stdin` and
+`stdout` are the default for input and output, respectively):
 
 	$ ./sha3-test -l 64 [-i input] [-o output]
 
 ### Additional Program Options
 
-The following ```getopt()``` command-line options below are available as well:
-  - '-h': Display program help and usage
-  - '-v': Display verbose program output (sent to stderr)
+The following `getopt()` command-line options below are available as well:
+  - `-h`: Display program help and usage
+  - `-v`: Display verbose program output (sent to stderr)
 
 ### Running Tests
 
