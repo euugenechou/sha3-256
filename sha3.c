@@ -108,7 +108,6 @@ static void keccak(void) {
 }
 
 static void absorb(uint64_t n, uint8_t data[static n]) {
-
     for (uint64_t i = 0; i < n; i += 1) {
         state.bytes[absorbed++] ^= data[i];
 
@@ -121,7 +120,7 @@ static void absorb(uint64_t n, uint8_t data[static n]) {
     padpoint = absorbed;
 }
 
-static void squeeze(uint8_t digest[]) {
+static void squeeze(uint8_t digest[static DIGEST]) {
     state.bytes[padpoint] ^= 0x06;
     state.bytes[RATE - 1] ^= 0x80;
 
