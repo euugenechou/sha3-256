@@ -7,8 +7,8 @@
 
 #define ROTL64(x, y)  (((x) << (y)) | ((x) >> (64 - (y))))
 
-static uint8_t padpoint = 0;
-static uint8_t absorbed = 0;
+static int padpoint = 0;
+static int absorbed = 0;
 
 static union {
     uint64_t words[LANES];
