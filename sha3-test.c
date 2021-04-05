@@ -23,31 +23,26 @@ void print_usage(char **argv) {
         "   -i input    Specify input to hash (stdin by default)\n"
         "   -o output   Specify output of hashed input (stdout by default)\n",
         argv[0]);
-    return;
 }
 
 void hash_file(int64_t length, FILE *infile, FILE *outfile) {
-    output("Len = %" PRId64 "\n", length);
-
     uint8_t *msg = (uint8_t *)calloc(length ? length : 1, sizeof(uint8_t));
     check(msg, "Failed to allocate array for message.\n");
 
+    output("Len = %" PRId64 "\n", length);
     fread(msg, sizeof(uint8_t), length, infile);
 
     output("Msg = ");
     hexprint(length, msg);
 
     uint8_t md[DIGEST] = { 0 };
-
     hash(length, msg, md);
 
     output("MD = ");
     hexprint(32, md);
 
     fwrite(md, sizeof(uint8_t), 32, outfile);
-
     free(msg);
-    return;
 }
 
 int main(int argc, char **argv) {
