@@ -1,6 +1,6 @@
 #include "sha3.h"
 
-#define ROUNDS  24    // Number of KECCAK rounds to perform for SHA-3 256.
+#define ROUNDS  24    // Number of KECCAK rounds to perform for SHA3-256.
 #define WIDTH   200   // 1600-bit width in bytes.
 #define LANES   25    // The state is an unrolled 5x5 array of 64-bit lanes.
 #define RATE    136   // 1600-bit width - 512-bit capacity in bytes.
