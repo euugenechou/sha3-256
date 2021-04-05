@@ -39,9 +39,9 @@ void hash_file(int64_t length, FILE *infile, FILE *outfile) {
     hash(length, msg, md);
 
     output("MD = ");
-    hexprint(32, md);
+    hexprint(DIGEST, md);
 
-    fwrite(md, sizeof(uint8_t), 32, outfile);
+    fwrite(md, sizeof(uint8_t), DIGEST, outfile);
     free(msg);
 }
 
