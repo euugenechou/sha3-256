@@ -1,4 +1,4 @@
-# SHA-3 256 in C
+# SHA3-256 in C
 
 This project is comprised of the singular program `sha3-test`, which is capable
 of performing the sponge-based, SHA-3 256 secure hash algorithm on arbitrary
