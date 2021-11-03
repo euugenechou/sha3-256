@@ -1,4 +1,5 @@
 #include "sha3.h"
+#include <string.h>
 
 #define ROUNDS  24    // Number of KECCAK rounds to perform for SHA3-256.
 #define WIDTH   200   // 1600-bit width in bytes.
@@ -131,6 +132,7 @@ static void squeeze(uint8_t digest[static DIGEST]) {
     }
 
     padpoint = absorbed = 0;
+    memset(&state, 0, sizeof(state));
 }
 
 void hash(uint64_t n, uint8_t data[static n], uint8_t digest[static DIGEST]) {
