@@ -1,31 +1,19 @@
 #include "sha3.h"
-#include <string.h>
 
-#define ROUNDS  24    // Number of KECCAK rounds to perform for SHA3-256.
-#define WIDTH   200   // 1600-bit width in bytes.
-#define LANES   25    // The state is an unrolled 5x5 array of 64-bit lanes.
-#define RATE    136   // 1600-bit width - 512-bit capacity in bytes.
+#include <string.h>
 
 #define ROTL64(x, y)  (((x) << (y)) | ((x) >> (64 - (y))))
 
-static int padpoint = 0;
-static int absorbed = 0;
-
-static union {
-    uint64_t words[LANES];
-    uint8_t bytes[WIDTH];
-} state;
-
-static void theta(void) {
+static void theta(struct Sha3_256 *ctx) {
     uint64_t C[5] = { 0 };
     uint64_t D[5] = { 0 };
 
     for (int i = 0; i < 5; i += 1) {
-        C[i]  = state.words[i];
-        C[i] ^= state.words[i + 5];
-        C[i] ^= state.words[i + 10];
-        C[i] ^= state.words[i + 15];
-        C[i] ^= state.words[i + 20];
+        C[i]  = ctx->state.words[i];
+        C[i] ^= ctx->state.words[i + 5];
+        C[i] ^= ctx->state.words[i + 10];
+        C[i] ^= ctx->state.words[i + 15];
+        C[i] ^= ctx->state.words[i + 20];
     }
 
     for (int i = 0; i < 5; i += 1) {
@@ -34,12 +22,12 @@ static void theta(void) {
 
     for (int i = 0; i < 5; i += 1) {
         for (int j = 0; j < 25; j += 5) {
-            state.words[i + j] ^= D[i];
+            ctx->state.words[i + j] ^= D[i];
         }
     }
 }
 
-static void rho(void) {
+static void rho(struct Sha3_256 *ctx) {
     static const int rotations[25] = {
          0,  1, 62, 28, 27,
         36, 44,  6, 55, 20,
@@ -49,11 +37,11 @@ static void rho(void) {
     };
 
     for (int i = 0; i < 25; i += 1) {
-        state.words[i] = ROTL64(state.words[i], rotations[i]);
+        ctx->state.words[i] = ROTL64(ctx->state.words[i], rotations[i]);
     }
 }
 
-static void pi(void) {
+static void pi(struct Sha3_256 *ctx) {
     static const int switcheroo[25] = {
          0, 10, 20,  5, 15,
         16,  1, 11, 21,  6,
@@ -65,29 +53,29 @@ static void pi(void) {
     uint64_t temp[25] = { 0 };
 
     for (int i = 0; i < 25; i += 1) {
-        temp[i] = state.words[i];
+        temp[i] = ctx->state.words[i];
     }
 
     for (int i = 0; i < 25; i += 1) {
-        state.words[switcheroo[i]] = temp[i];
+        ctx->state.words[switcheroo[i]] = temp[i];
     }
 }
 
-static void chi(void) {
+static void chi(struct Sha3_256 *ctx) {
     uint64_t temp[5] = { 0 };
 
     for (int j = 0; j < 25; j += 5) {
         for (int i = 0; i < 5; i += 1) {
-            temp[i] = state.words[i + j];
+            temp[i] = ctx->state.words[i + j];
         }
 
         for (int i = 0; i < 5; i += 1) {
-            state.words[i + j] ^= (~temp[(i + 1) % 5]) & temp[(i + 2) % 5];
+            ctx->state.words[i + j] ^= (~temp[(i + 1) % 5]) & temp[(i + 2) % 5];
         }
     }
 }
 
-static void iota(uint8_t r) {
+static void iota(struct Sha3_256 *ctx, uint8_t r) {
     static const uint64_t constants[24] = {
         0x0000000000000001, 0x0000000000008082, 0x800000000000808a,
         0x8000000080008000, 0x000000000000808b, 0x0000000080000001,
@@ -99,43 +87,63 @@ static void iota(uint8_t r) {
         0x8000000000008080, 0x0000000080000001, 0x8000000080008008
     };
 
-    state.words[0] ^= constants[r];
+    ctx->state.words[0] ^= constants[r];
 }
 
-static void keccak(void) {
-    for (int i = 0; i < ROUNDS; i += 1) {
-        theta(); rho(); pi(); chi(); iota(i);
+static void keccak(struct Sha3_256 *ctx) {
+    for (int i = 0; i < SHA3_256_ROUNDS; i += 1) {
+        theta(ctx);
+        rho(ctx);
+        pi(ctx);
+        chi(ctx);
+        iota(ctx, i);
     }
 }
 
-static void absorb(uint64_t n, uint8_t data[static n]) {
+static void absorb(struct Sha3_256 *ctx, uint8_t *data, uint64_t n) {
     for (uint64_t i = 0; i < n; i += 1) {
-        state.bytes[absorbed++] ^= data[i];
+        ctx->state.bytes[ctx->absorbed++] ^= data[i];
 
-        if (absorbed == RATE) {
-            keccak();
-            absorbed = 0;
+        if (ctx->absorbed == SHA3_256_RATE) {
+            keccak(ctx);
+            ctx->absorbed = 0;
         }
     }
 
-    padpoint = absorbed;
+    ctx->padpoint = ctx->absorbed;
 }
 
-static void squeeze(uint8_t digest[static DIGEST]) {
-    state.bytes[padpoint] ^= 0x06;
-    state.bytes[RATE - 1] ^= 0x80;
+static void squeeze(struct Sha3_256 *ctx, uint8_t *digest) {
+    ctx->state.bytes[ctx->padpoint] ^= 0x06;
+    ctx->state.bytes[SHA3_256_RATE - 1] ^= 0x80;
 
-    keccak();
+    keccak(ctx);
 
-    for (int i = 0; i < DIGEST; i += 1) {
-        digest[i] = state.bytes[i];
+    for (int i = 0; i < SHA3_256_MD_LEN; i += 1) {
+        digest[i] = ctx->state.bytes[i];
     }
 
-    padpoint = absorbed = 0;
-    memset(&state, 0, sizeof(state));
+    ctx->padpoint = ctx->absorbed = 0;
+    memset(&ctx->state.words, 0, sizeof(ctx->state.words));
 }
 
-void hash(uint64_t n, uint8_t data[static n], uint8_t digest[static DIGEST]) {
-    absorb(n, data);
-    squeeze(digest);
+struct Sha3_256 sha3_256_new(void) {
+    struct Sha3_256 ctx;
+    memset(&ctx, 0, sizeof(ctx));
+    return ctx;
+}
+
+void sha3_256_update(struct Sha3_256 *ctx, uint8_t *data, uint64_t n) {
+    absorb(ctx, data, n);
+}
+
+void sha3_256_finalize(struct Sha3_256 *ctx, uint8_t *digest) {
+    squeeze(ctx, digest);
+    memset(ctx, 0, sizeof(*ctx));
+}
+
+void sha3_256_digest(uint8_t *data, uint64_t n, uint8_t *digest) {
+    struct Sha3_256 ctx = sha3_256_new();
+    absorb(&ctx, data, n);
+    squeeze(&ctx, digest);
 }

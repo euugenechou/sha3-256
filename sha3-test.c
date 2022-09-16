@@ -35,13 +35,13 @@ void hash_file(int64_t length, FILE *infile, FILE *outfile) {
     output("Msg = ");
     hexprint(length, msg);
 
-    uint8_t md[DIGEST] = { 0 };
-    hash(length, msg, md);
+    uint8_t md[SHA3_256_MD_LEN] = { 0 };
+    sha3_256_digest(msg, length, md);
 
     output("MD = ");
-    hexprint(DIGEST, md);
+    hexprint(SHA3_256_MD_LEN, md);
 
-    fwrite(md, sizeof(uint8_t), DIGEST, outfile);
+    fwrite(md, sizeof(uint8_t), SHA3_256_MD_LEN, outfile);
     free(msg);
 }
 
