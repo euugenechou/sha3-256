@@ -139,7 +139,6 @@ void sha3_256_update(struct Sha3_256 *ctx, uint8_t *data, uint64_t n) {
 
 void sha3_256_finalize(struct Sha3_256 *ctx, uint8_t *digest) {
     squeeze(ctx, digest);
-    memset(ctx, 0, sizeof(*ctx));
 }
 
 void sha3_256_digest(uint8_t *data, uint64_t n, uint8_t *digest) {
