@@ -9,8 +9,8 @@
 #define SHA3_256_RATE   136     // 1600-bit width - 512-bit capacity in bytes.
 
 struct Sha3_256 {
-    uint64_t padpoint;
-    uint64_t absorbed;
+    int padpoint;
+    int absorbed;
     union {
         uint64_t words[SHA3_256_LANES];
         uint8_t bytes[SHA3_256_WIDTH];
